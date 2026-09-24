@@ -227,25 +227,18 @@
 
   /* MID CTA */
 
-  /* GALLERY — continuous infinite marquee */
-  .gal-carousel{
-    position:relative;margin-top:46px;overflow:hidden;
+  /* GALLERY — auto-scrolling carousel with manual controls */
+  .gal-carousel{position:relative;margin-top:46px;}
+  .gal-viewport{
+    overflow-x:auto;overflow-y:hidden;
+    -webkit-overflow-scrolling:touch;scrollbar-width:none;-ms-overflow-style:none;
     -webkit-mask-image:linear-gradient(90deg,transparent,#000 6%,#000 94%,transparent);
     mask-image:linear-gradient(90deg,transparent,#000 6%,#000 94%,transparent);
   }
-  .gal-track{
-    display:flex;gap:18px;width:max-content;padding:14px 0 10px;
-    animation:gal-marquee 42s linear infinite;
-    will-change:transform;
-  }
-  .gal-track.paused{animation-play-state:paused;}
-  @keyframes gal-marquee{from{transform:translateX(0);}to{transform:translateX(-50%);}}
-  @media (prefers-reduced-motion: reduce){
-    .gal-carousel{overflow-x:auto;-webkit-overflow-scrolling:touch;}
-    .gal-track{animation:none !important;}
-  }
+  .gal-viewport::-webkit-scrollbar{display:none;}
+  .gal-track{display:flex;gap:18px;width:max-content;padding:14px 0 10px;}
   .gal-item{
-    position:relative;flex:0 0 auto;width:min(76vw,290px);
+    position:relative;flex:0 0 auto;width:min(76vw,290px);cursor:pointer;
     border-radius:18px;overflow:hidden;aspect-ratio:1/1;
     box-shadow:0 10px 22px rgba(10,40,42,.14);
     opacity:.5;transform:scale(.86);
@@ -265,6 +258,22 @@
   .gal-item.is-active img{transform:scale(1.05);}
   .gal-item .cap{position:absolute;left:0;right:0;bottom:0;background:linear-gradient(180deg,transparent,rgba(10,50,50,.88));color:#fff;font-size:.82rem;font-weight:700;padding:32px 14px 14px;transform:translateY(10px);opacity:0;transition:transform .3s ease, opacity .3s ease;}
   .gal-item.is-active .cap,.gal-item:hover .cap{transform:translateY(0);opacity:1;}
+
+  .car-arrow{
+    position:absolute;top:50%;transform:translateY(-50%);z-index:5;
+    width:48px;height:48px;border-radius:50%;border:none;cursor:pointer;
+    background:#fff;color:var(--teal-dark);box-shadow:0 10px 24px rgba(10,40,42,.2);
+    display:flex;align-items:center;justify-content:center;
+    transition:background .2s ease, color .2s ease, transform .15s ease;
+  }
+  .car-arrow svg{width:20px;height:20px;stroke:currentColor;fill:none;stroke-width:2.4;stroke-linecap:round;stroke-linejoin:round;}
+  .car-arrow:hover{background:var(--coral);color:#fff;transform:translateY(-50%) scale(1.08);}
+  .car-prev{left:2px;}
+  .car-next{right:2px;}
+  @media (max-width:900px),(hover:none){.car-arrow{display:none;}}
+
+  .gal-progress{height:5px;border-radius:3px;background:var(--line);margin:2px auto 0;overflow:hidden;max-width:320px;}
+  .gal-progress-fill{height:100%;width:2%;background:linear-gradient(90deg,var(--coral),var(--yellow));border-radius:3px;}
 
   .name-block{position:relative;border-radius:24px;overflow:hidden;color:#fff;padding:64px;}
   .name-block .bg{position:absolute;inset:0;object-fit:cover;width:100%;height:100%;}
@@ -714,7 +723,9 @@
         <p class="lead center"><span lang="pap">Un impreshon di e bida diario na Krèsh Dede Pikiña, for di wega pafó te selebrashon kultural i momentonan huntu.</span><span lang="nl" hidden>Een impressie van het dagelijks leven bij Krèsh Dede Pikiña, van buiten spelen tot culturele vieringen en gezamenlijke momenten.</span></p>
       </div>
       <div class="gal-carousel">
-        <div class="gal-track" id="galTrack" role="region" aria-label="Galeria di retrato">
+        <button class="car-arrow car-prev" id="galPrev" type="button" aria-label="Retrato anterior"><svg viewBox="0 0 24 24"><path d="M15 18l-6-6 6-6"/></svg></button>
+        <div class="gal-viewport" id="galViewport" role="region" aria-label="Galeria di retrato">
+        <div class="gal-track" id="galTrack">
         <div class="gal-item"><img src="photos/gallery_01.jpg" alt="Buiten spelen op de speelplaats"><div class="cap"><span lang="pap">Ora di wega</span><span lang="nl" hidden>Buiten spelen</span></div></div>
         <div class="gal-item"><img src="photos/gallery_02.jpg" alt="Creatieve knutselactiviteit"><div class="cap"><span lang="pap">Aktividatnan kreativo</span><span lang="nl" hidden>Creatieve activiteiten</span></div></div>
         <div class="gal-item"><img src="photos/gallery_03.jpg" alt="Culturele viering met traditionele kleding"><div class="cap"><span lang="pap">Kultura di Kòrsou</span><span lang="nl" hidden>Cultuur op Curaçao</span></div></div>
@@ -758,7 +769,10 @@
         <div class="gal-item" aria-hidden="true"><img src="photos/zwembad_2.jpg" alt=""><div class="cap"><span lang="pap">Plaser den awa</span><span lang="nl" hidden>Plezier in het water</span></div></div>
         <div class="gal-item" aria-hidden="true"><img src="photos/zwembad_3.jpg" alt=""><div class="cap"><span lang="pap">Dia na piskina</span><span lang="nl" hidden>Dagje zwembad</span></div></div>
         </div>
+        </div>
+        <button class="car-arrow car-next" id="galNext" type="button" aria-label="Retrato siguiente"><svg viewBox="0 0 24 24"><path d="M9 6l6 6-6 6"/></svg></button>
       </div>
+      <div class="gal-progress"><div class="gal-progress-fill" id="galProgressFill"></div></div>
     </div>
   </section>
 
@@ -989,17 +1003,35 @@
 
 <script>
 (function(){
-  // ===== Gallery marquee: continuous loop, spotlight on the centered photo =====
+  // ===== Gallery carousel: slow auto-scroll, spotlight on the centered photo, manual controls =====
+  var viewport = document.getElementById('galViewport');
   var track = document.getElementById('galTrack');
-  if(!track) return;
-  var wrap = track.parentElement;
+  if(!viewport || !track) return;
+  var prevBtn = document.getElementById('galPrev');
+  var nextBtn = document.getElementById('galNext');
+  var fill = document.getElementById('galProgressFill');
   var reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 
-  function updateActive(){
-    var wrapRect = wrap.getBoundingClientRect();
-    var center = wrapRect.left + wrapRect.width / 2;
-    var closest = null, closestDist = Infinity;
+  var SPEED = 28; // px per second — slow, easy to read
+  var userPaused = false;
+  var hovering = false;
+  var lastTime = null;
+
+  function halfWidth(){ return track.scrollWidth / 2; }
+
+  function cardStep(){
+    var first = track.children[0];
+    if(!first) return 300;
+    var style = window.getComputedStyle(track);
+    var gap = parseFloat(style.columnGap || style.gap) || 0;
+    return first.offsetWidth + gap;
+  }
+
+  function updateActiveAndProgress(){
+    var vRect = viewport.getBoundingClientRect();
+    var center = vRect.left + vRect.width / 2;
     var items = track.children;
+    var closest = null, closestDist = Infinity;
     for(var i = 0; i < items.length; i++){
       var it = items[i];
       var r = it.getBoundingClientRect();
@@ -1009,34 +1041,50 @@
       if(d < closestDist){ closestDist = d; closest = it; }
     }
     if(closest){ closest.classList.add('is-active'); }
+
+    var hw = halfWidth();
+    if(fill && hw > 0){
+      var pos = viewport.scrollLeft % hw;
+      if(pos < 0){ pos += hw; }
+      var pct = (pos / hw) * 100;
+      fill.style.width = Math.max(2, Math.min(100, pct)) + '%';
+    }
   }
 
-  var rafId = null;
-  function loop(){
-    updateActive();
-    rafId = window.requestAnimationFrame(loop);
+  function step(ts){
+    if(lastTime === null){ lastTime = ts; }
+    var dt = (ts - lastTime) / 1000;
+    lastTime = ts;
+
+    var hw = halfWidth();
+    if(!userPaused && !hovering && !reduceMotion && hw > 0){
+      viewport.scrollLeft += SPEED * dt;
+      if(viewport.scrollLeft >= hw){ viewport.scrollLeft -= hw; }
+    }
+    updateActiveAndProgress();
+    window.requestAnimationFrame(step);
   }
 
-  function pause(){ track.classList.add('paused'); }
-  function resume(){ track.classList.remove('paused'); }
-
-  track.addEventListener('mouseenter', pause);
-  track.addEventListener('mouseleave', resume);
-  var resumeTimer = null;
-  track.addEventListener('touchstart', function(){
-    pause();
-    clearTimeout(resumeTimer);
-  }, {passive:true});
-  track.addEventListener('touchend', function(){
-    clearTimeout(resumeTimer);
-    resumeTimer = setTimeout(resume, 1800);
-  }, {passive:true});
-
-  if(reduceMotion){
-    updateActive();
-  } else {
-    rafId = window.requestAnimationFrame(loop);
+  function goTo(n){
+    var hw = halfWidth();
+    if(hw <= 0){ return; }
+    var target = viewport.scrollLeft + n * cardStep();
+    if(target < 0){ target += hw; }
+    if(target >= hw){ target -= hw; }
+    viewport.scrollLeft = target;
   }
+
+  if(prevBtn){ prevBtn.addEventListener('click', function(){ userPaused = true; goTo(-1); }); }
+  if(nextBtn){ nextBtn.addEventListener('click', function(){ userPaused = true; goTo(1); }); }
+
+  track.addEventListener('click', function(){ userPaused = !userPaused; });
+
+  viewport.addEventListener('mouseenter', function(){ hovering = true; });
+  viewport.addEventListener('mouseleave', function(){ hovering = false; });
+  viewport.addEventListener('touchstart', function(){ hovering = true; }, {passive:true});
+  viewport.addEventListener('touchend', function(){ hovering = false; }, {passive:true});
+
+  window.requestAnimationFrame(step);
 })();
 </script>
 
