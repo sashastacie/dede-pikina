@@ -1079,8 +1079,8 @@
 
   track.addEventListener('click', function(){ userPaused = !userPaused; });
 
-  viewport.addEventListener('mouseenter', function(){ hovering = true; });
-  viewport.addEventListener('mouseleave', function(){ hovering = false; });
+  // Only pause while a finger is actually touching/dragging — a mouse just
+  // passing over the gallery while reading the page should not freeze it.
   viewport.addEventListener('touchstart', function(){ hovering = true; }, {passive:true});
   viewport.addEventListener('touchend', function(){ hovering = false; }, {passive:true});
 
